@@ -4,6 +4,8 @@ import re
 import numpy as np
 import glob
 import csv
+import sklearn
+
 
 class Article:
 
@@ -111,21 +113,23 @@ class Article:
 		#get unique entities
 		uni_ents = [e for e in exp.ent_id.unique().tolist() if e != '_']
 		#get context for each entity
-		polarity_df = self.mapContext(exp, uni_ents)
+		# polarity_df = self.mapContext(exp, uni_ents)
 		# make feature vector for each DataFrame
-		self.createFeatures(exp, polarity_df)
+		article_df = self.createFeatures(exp)
+		return article_df
 
-	def createFeatures(self, main_df, polarity_df):
+	def createFeatures(self, main_df):
 		#this DataFrame will have feature vector as row
-		df_empty = pd.DataFrame({'isPerson' : [],'hasClues':[],'isSubject':[],'isObject':[], 'isAmod':[], 'pol_con':[],'polarity':[]})
+		#'pol_con':[] NEXT STEP class
+		df_empty = pd.DataFrame({'isPerson' : [],'isSubject':[],'isObject':[],'hasClues':[],'hasDescriptors':[],'polarity':[]})
 		for i, g in main_df.groupby('ent_id'):
 			if i != '_':#TODO: groupby takes '_' as a group, REMOVE IT!!!
-				polar_score = polarity_df[polarity_df['ent_id']==i].context_polarity.item()
+				# polar_score = polarity_df[polarity_df['ent_id']==i].context_polarity.item()
 				# process each entity_dataframe
-				df2 = self.processDF(main_df,g, polar_score)
+				df2 = self.processDF(main_df,g)
 				#returned feature vector append it to the df_empty DF
 				df_empty = df_empty.append(df2, ignore_index=True)
-		print(df_empty)
+		return df_empty
 	
 	#this is method for finding Main Entity
 	#each article has several entities and their occurencies
@@ -145,38 +149,74 @@ class Article:
 			return ""
 
 	#takes main_df, entity_df and calculated polarity_score of the context of the entity
-	def processDF(self, main_df, entity_df, polar_score):
+	def processDF(self, main_df, entity_df):
 		df = entity_df.drop_duplicates(subset=['lemma'], keep='last')
 		#create features for each entity
 		isPerson = 1 if df["ner"].str.contains('PER\\[*').any() else 0 # true if there is at least one PERSon type in column ner
 		hasClues = 0 if np.isnan(df["polar_score"]).all() else 1#true if all polarity scores are Nan, else False
 		isSubject = 1 if df["dependency"].str.contains('nsubj').any() else 0
 		isObject = 1 if df["dependency"].str.contains('obj').any() else 0
-		isAmod = 1 if df["dependency"].str.contains('amod').any() else 0
+		# isAmod = 1 if df["dependency"].str.contains('amod').any() else 0| NEXT STEP class
 		#take its polarity (target variable)
 		pol = df.polarity.iloc[-1].split("-")[0]
 		#determine main entity
 		main_ent =self.mainEntity(df)
+		hasDes = self.hasDescriptors(main_df, main_ent)
 		if pol != '_' : #entities that don't have polarity annotation are discarded
 			if main_ent != "": #entities different than noun, pronomen and adj are also discarded
-				df2 = pd.DataFrame({'isPerson':[isPerson], 'hasClues':[hasClues], 'isSubject':[isSubject],'isObject':[isObject], 'isAmod':[isAmod], 'pol_con':[polar_score],'polarity':[pol]})
+				#'pol_con':[polar_score] -> NEXT STEP classification
+				df2 = pd.DataFrame({'isPerson':[isPerson],'isSubject':[isSubject],'isObject':[isObject], 'hasClues':[hasClues],'hasDescriptors':[hasDes], 'polarity':[pol]})
 				return df2
+
+
+	#according to Sweeny paper: if the MAIN_ENT has descriptor words (ADJ, ADV,VERB)
+	#in the neighborhood than it can be considered as polar
+	# used as a feature for NEUTRAL-POLAR classification
+	def hasDescriptors(self, main_df, main_ent):
+		w = 3
+		tags = []
+		indices = main_df[main_df['word']==main_ent].index.values
+		for i in indices:
+			if i < 3:
+				tags.append(main_df.loc[i+1,'POS_tag'])
+				tags.append(main_df.loc[i+2,'POS_tag'])
+				tags.append(main_df.loc[i+3,'POS_tag'])
+			elif i >= len(main_df)-3:
+				tags.append(main_df.loc[i-3,'POS_tag'])
+				tags.append(main_df.loc[i-2,'POS_tag'])
+				tags.append(main_df.loc[i-1,'POS_tag'])
+			else:
+				tags.append(main_df.loc[i-3,'POS_tag'])
+				tags.append(main_df.loc[i-2,'POS_tag'])
+				tags.append(main_df.loc[i-1,'POS_tag'])
+				tags.append(main_df.loc[i+1,'POS_tag'])
+				tags.append(main_df.loc[i+2,'POS_tag'])
+				tags.append(main_df.loc[i+3,'POS_tag'])
+		if ('ADJ' in tags) or ('ADV' in tags) or ('VERB' in tags):
+			return 1
+		else:
+			return 0
+
 
 if __name__ == "__main__":
 
-	data_path = 'DATA/1.tsv'
+	#TODO: implement reading multiple files at the same time 
+	data_path = 'DATA'
 	lex_path = 'Lexicon/lex.txt'
-	print(data_path)
+
 
 	nlp = stanza.Pipeline(lang='sl', processors='tokenize,mwt,pos,lemma,depparse')
 	pd.set_option('display.max_columns', None)
-	
-	#RUN through all files
-	# all_files = glob.glob(data_path + "/*.tsv")
-	# for filename in all_files:
-	# 	a = Article(filename, lex_path)
-	# 	a.read_data()
+ 
+	#init empty DF which will gather DF from multiple articles (train set)
+	df_total = pd.DataFrame({'isPerson':[],'isSubject':[],'isObject':[], 'hasClues':[],'hasDescriptors':[], 'polarity':[]})
 
-	#take only one one article
-	a = Article(data_path, lex_path)
-	a.read_data()
+	all_files = glob.glob(data_path + "/*.tsv")
+	for filename in all_files:
+		a = Article(filename, lex_path)
+		df_article = a.read_data()
+		df_total = df_total.append(df_article, ignore_index=True)
+	df_total.to_csv(r'first_df.csv', index = False, header=True)
+	
+	# a = Article(data_path, lex_path)
+	# article_df = a.read_data()97

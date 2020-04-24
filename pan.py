@@ -156,12 +156,11 @@ class Article:
 		hasClues = 0 if np.isnan(df["polar_score"]).all() else 1#true if all polarity scores are Nan, else False
 		isSubject = 1 if df["dependency"].str.contains('nsubj').any() else 0
 		isObject = 1 if df["dependency"].str.contains('obj').any() else 0
-		# isAmod = 1 if df["dependency"].str.contains('amod').any() else 0| NEXT STEP class
+		main_ent =self.mainEntity(df)
+		hasDes = 1 if df["POS_tag"].str.contains('VERB').any() else self.hasDescriptors(main_df, main_ent)
 		#take its polarity (target variable)
 		pol = df.polarity.iloc[-1].split("-")[0]
 		#determine main entity
-		main_ent =self.mainEntity(df)
-		hasDes = self.hasDescriptors(main_df, main_ent)
 		if pol != '_' : #entities that don't have polarity annotation are discarded
 			if main_ent != "": #entities different than noun, pronomen and adj are also discarded
 				#'pol_con':[polar_score] -> NEXT STEP classification
@@ -192,7 +191,7 @@ class Article:
 				tags.append(main_df.loc[i+1,'POS_tag'])
 				tags.append(main_df.loc[i+2,'POS_tag'])
 				tags.append(main_df.loc[i+3,'POS_tag'])
-		if ('ADJ' in tags) or ('ADV' in tags) or ('VERB' in tags):
+		if ('ADJ' in tags) or ('ADV' in tags):
 			return 1
 		else:
 			return 0
@@ -219,4 +218,5 @@ if __name__ == "__main__":
 	df_total.to_csv(r'first_df.csv', index = False, header=True)
 	
 	# a = Article(data_path, lex_path)
-	# article_df = a.read_data()97
+	# article_df = a.read_data()
+	# print(article_df)

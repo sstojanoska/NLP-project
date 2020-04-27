@@ -5,7 +5,8 @@ import numpy as np
 import glob
 import csv
 import sklearn
-
+import nltk
+from nltk.corpus import stopwords
 
 class Article:
 
@@ -79,6 +80,21 @@ class Article:
 		avg_pol = np.round(np.mean(polarities),4)
 		return avg_pol
 
+	def join_negation(self, main_df):
+		main_df['isNegated'] = 0 #added plus one column to the main_df
+		be_negated = ['nisva','nismo','nisem', 'nista', 'niste', 'nisi', 'niso', 'ni' ]
+		negation_idxs = main_df.word.apply(lambda x: x in be_negated)
+		for i in main_df.word[negation_idxs].index.tolist():
+			main_df.loc[i+1,'isNegated'] = 1
+		return main_df
+
+	def removeStopwords(self,main_df):
+		stop = stopwords.words('slovene')
+		mask_stop = main_df.word.apply(lambda x: x not in stop)
+		fixed_df = main_df[mask_stop]
+		return fixed_df
+
+
 	# 1. main function
 	def read_data(self):
 		# read article and lexicon as DataFrame-s
@@ -114,6 +130,10 @@ class Article:
 		uni_ents = [e for e in exp.ent_id.unique().tolist() if e != '_']
 		#get context for each entity
 		# polarity_df = self.mapContext(exp, uni_ents)
+		#keep track of the negation:
+		neg_maindf = self.join_negation(exp)
+		#remove stopwords
+		fixed_df= self.removeStopwords(neg_maindf)
 		# make feature vector for each DataFrame
 		article_df = self.createFeatures(exp)
 		return article_df
@@ -121,7 +141,7 @@ class Article:
 	def createFeatures(self, main_df):
 		#this DataFrame will have feature vector as row
 		#'pol_con':[] NEXT STEP class
-		df_empty = pd.DataFrame({'isPerson' : [],'isSubject':[],'isObject':[],'hasClues':[],'hasDescriptors':[],'polarity':[]})
+		df_empty = pd.DataFrame({'isPerson' : [],'isSubject':[],'isObject':[],'isNegated':[] ,'hasClues':[],'hasDescriptors':[],'polarity':[]})
 		for i, g in main_df.groupby('ent_id'):
 			if i != '_':#TODO: groupby takes '_' as a group, REMOVE IT!!!
 				# polar_score = polarity_df[polarity_df['ent_id']==i].context_polarity.item()
@@ -156,6 +176,7 @@ class Article:
 		hasClues = 0 if np.isnan(df["polar_score"]).all() else 1#true if all polarity scores are Nan, else False
 		isSubject = 1 if df["dependency"].str.contains('nsubj').any() else 0
 		isObject = 1 if df["dependency"].str.contains('obj').any() else 0
+		isNegated = 1 if 1 in df["isNegated"].tolist() else 0
 		main_ent =self.mainEntity(df)
 		hasDes = 1 if df["POS_tag"].str.contains('VERB').any() else self.hasDescriptors(main_df, main_ent)
 		#take its polarity (target variable)
@@ -164,7 +185,7 @@ class Article:
 		if pol != '_' : #entities that don't have polarity annotation are discarded
 			if main_ent != "": #entities different than noun, pronomen and adj are also discarded
 				#'pol_con':[polar_score] -> NEXT STEP classification
-				df2 = pd.DataFrame({'isPerson':[isPerson],'isSubject':[isSubject],'isObject':[isObject], 'hasClues':[hasClues],'hasDescriptors':[hasDes], 'polarity':[pol]})
+				df2 = pd.DataFrame({'isPerson':[isPerson],'isSubject':[isSubject],'isObject':[isObject],'isNegated':[isNegated], 'hasClues':[hasClues],'hasDescriptors':[hasDes], 'polarity':[pol]})
 				return df2
 
 
@@ -208,14 +229,14 @@ if __name__ == "__main__":
 	pd.set_option('display.max_columns', None)
  
 	#init empty DF which will gather DF from multiple articles (train set)
-	df_total = pd.DataFrame({'isPerson':[],'isSubject':[],'isObject':[], 'hasClues':[],'hasDescriptors':[], 'polarity':[]})
+	df_total = pd.DataFrame({'isPerson':[],'isSubject':[],'isObject':[],'isNegated':[] ,'hasClues':[],'hasDescriptors':[], 'polarity':[]})
 
 	all_files = glob.glob(data_path + "/*.tsv")
 	for filename in all_files:
 		a = Article(filename, lex_path)
 		df_article = a.read_data()
 		df_total = df_total.append(df_article, ignore_index=True)
-	df_total.to_csv(r'first_df.csv', index = False, header=True)
+	df_total.to_csv(r'third_df_rmsw.csv', index = False, header=True)
 	
 	# a = Article(data_path, lex_path)
 	# article_df = a.read_data()

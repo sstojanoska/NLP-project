@@ -2,3 +2,5 @@
 DATA/
 #Lexicon folder
 Lexicon/
+#Document folder (sentiNews dataset-document level)
+Document/

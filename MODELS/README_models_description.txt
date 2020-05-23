@@ -676,4 +676,80 @@ ________________________________________________________________________________
 _______________________________________________________________________________________________________________
 TODO:7.csv 'contPol' as a concordance
 
+_______________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________
+positivesNB.csv - This dataset is consisted of rows from 2.csv which are both 'ground-truth' polar (classes 1,2,4,5)
+and classified also as polar with Naive Bayes. On this dataset is peformed only positive-negative classification.
+
+RESULTS:
+
+NaiveBayes: pos-neg
+
+              precision    recall  f1-score   support
+
+           0       0.70      0.77      0.73        30
+           1       0.63      0.55      0.59        22
+
+    accuracy                           0.67        52
+   macro avg       0.66      0.66      0.66        52
+weighted avg       0.67      0.67      0.67        52
+
+[[23  7]
+ [10 12]]
+  ---------------------------------------------------------
+RandomForestClassifier: pos-neg
+
+              precision    recall  f1-score   support
+
+           0       0.65      0.67      0.66        30
+           1       0.52      0.50      0.51        22
+
+    accuracy                           0.60        52
+   macro avg       0.58      0.58      0.58        52
+weighted avg       0.59      0.60      0.59        52
+
+[[20 10]
+ [11 11]]
+ ---------------------------------------------------------
+LogisticRegression: pos-neg
+
+              precision    recall  f1-score   support
+
+           0       0.74      0.77      0.75        30
+           1       0.67      0.64      0.65        22
+
+    accuracy                           0.71        52
+   macro avg       0.70      0.70      0.70        52
+weighted avg       0.71      0.71      0.71        52
+
+[[23  7]
+ [ 8 14]]
+  ---------------------------------------------------------
+SVC: pos-neg
+
+              precision    recall  f1-score   support
+
+           0       0.70      0.70      0.70        30
+           1       0.59      0.59      0.59        22
+
+    accuracy                           0.65        52
+   macro avg       0.65      0.65      0.65        52
+weighted avg       0.65      0.65      0.65        52
+
+[[21  9]
+ [ 9 13]]
+  ---------------------------------------------------------
+KNeighborsClassifier: pos-neg
+
+              precision    recall  f1-score   support
+
+           0       0.62      0.77      0.69        30
+           1       0.53      0.36      0.43        22
+
+    accuracy                           0.60        52
+   macro avg       0.58      0.57      0.56        52
+weighted avg       0.58      0.60      0.58        52
+
+[[23  7]
+ [14  8]]
 

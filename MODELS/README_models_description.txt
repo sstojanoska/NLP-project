@@ -678,7 +678,7 @@ TODO:7.csv 'contPol' as a concordance
 
 _______________________________________________________________________________________________________________
 _______________________________________________________________________________________________________________
-positivesNB.csv - This dataset is consisted of rows from 2.csv which are both 'ground-truth' polar (classes 1,2,4,5)
+polarTest2NB.csv - This dataset is consisted of rows from 2.csv which are both 'ground-truth' polar (classes 1,2,4,5)
 and classified also as polar with Naive Bayes. On this dataset is peformed only positive-negative classification.
 
 RESULTS:
@@ -753,3 +753,73 @@ weighted avg       0.58      0.60      0.58        52
 [[23  7]
  [14  8]]
 
+_______________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________
+polarTest6RF.csv - This dataset is consisted of rows from 2.csv which are both 'ground-truth' polar (classes 1,2,4,5)
+and classified also as polar with Naive Bayes. On this dataset is peformed only positive-negative classification.
+
+NaiveBayes:
+
+              precision    recall  f1-score   support
+
+           0       0.75      0.78      0.77        51
+           1       0.72      0.68      0.70        41
+
+    accuracy                           0.74        92
+   macro avg       0.74      0.73      0.73        92
+weighted avg       0.74      0.74      0.74        92
+
+[[40 11]
+ [13 28]]
+RandomForestClassifier:
+
+              precision    recall  f1-score   support
+
+           0       0.79      0.75      0.77        51
+           1       0.70      0.76      0.73        41
+
+    accuracy                           0.75        92
+   macro avg       0.75      0.75      0.75        92
+weighted avg       0.75      0.75      0.75        92
+
+[[38 13]
+ [10 31]]
+LogisticRegression:
+
+              precision    recall  f1-score   support
+
+           0       0.78      0.71      0.74        51
+           1       0.67      0.76      0.71        41
+
+    accuracy                           0.73        92
+   macro avg       0.73      0.73      0.73        92
+weighted avg       0.73      0.73      0.73        92
+
+[[36 15]
+ [10 31]]
+SVC:
+
+              precision    recall  f1-score   support
+
+           0       0.82      0.71      0.76        51
+           1       0.69      0.80      0.74        41
+
+    accuracy                           0.75        92
+   macro avg       0.75      0.76      0.75        92
+weighted avg       0.76      0.75      0.75        92
+
+[[36 15]
+ [ 8 33]]
+KNeighborsClassifier:
+
+              precision    recall  f1-score   support
+
+           0       0.76      0.80      0.78        51
+           1       0.74      0.68      0.71        41
+
+    accuracy                           0.75        92
+   macro avg       0.75      0.74      0.74        92
+weighted avg       0.75      0.75      0.75        92
+
+[[41 10]
+ [13 28]]

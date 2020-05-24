@@ -13,9 +13,10 @@ import operator
 from itertools import combinations, product
 import collections
 from collections import defaultdict
-from context_deprel import get_featureSentiment
-from context_shortest_path import sentRelations
-from context_window import getWindowPol
+from context_feature.context_deprel import get_featureSentiment
+from context_feature.context_shortest_path import sentRelations
+from context_feature.context_window import getWindowPol
+from context_feature.context_concordances import get_concordance_polarity
 
 
 def documentPolarity(doc_path):
@@ -25,7 +26,7 @@ def documentPolarity(doc_path):
     :return: dict of document and its polarity
     """
 	numerical_pol = {'neutral':0, 'positive':1, 'negative':-1}
-	with open(doc_path) as inf:
+	with open(doc_path, encoding="utf8") as inf:
 		reader = csv.reader(inf, delimiter="\t")
 		next(reader)
 		cols = list(zip(*reader))
@@ -120,6 +121,11 @@ class Article:
 		d['POS_tag'] = pos
 		rels = get_featureSentiment(d, lex_path) #sentRelations(d,lex_path)
 		expanded_df = self.unnesting(d)
+		uni_ents = [e for e in expanded_df.ent_id.unique().tolist() if e != '_']
+		
+		#uncomment function to get concordance_polarity
+		#rels = get_concordance_polarity(expanded_df, uni_ents, lex_path)
+		
 		stop = stopwords.words('slovene')
 		expanded_df = expanded_df[~expanded_df['word'].isin(stop)]
 		expanded_df.reset_index(inplace=True)
@@ -138,6 +144,8 @@ class Article:
 		df_empty = pd.DataFrame({'isPerson' : [],'isSubject':[],'isObject':[],'hasDescriptors':[],'contPol':[],'docPol':[],'polarity':[]})
 		for i, g in main_df.groupby('ent_id'):
 			if i != '_':
+				#uncomment below for concordance_pol
+				#rels2 = rels[rels['ent_id']==i].conc_pol.item()
 				df2 = self.processDF(main_df,g, rels, docPol)
 				df_empty = df_empty.append(df2, ignore_index=True)
 		return df_empty
@@ -174,6 +182,8 @@ class Article:
 		# df.drop(df[df['POS_tag'] == 'VERB'].index, axis=0, inplace=True)
 		lex = get_opinion(self.lex_path)
 		poli = getWindowPol(main_df, entity_df, rels)
+		#uncomment below function for concordance_pol, comment above 
+		#poli = rels
 		# create features for each entity
 		isPerson = 1 if df["ner"].str.contains('PER\\[*').any() else 0 # true if there is at least one PERSon type in column ner
 		isSubject = 1 if df["dependency"].str.contains('nsubj').any() else 0

@@ -1,6 +1,6 @@
 #DATA folder 
-DATA/
+#DATA/
 #Lexicon folder
-Lexicon/
+#Lexicon/
 #Document folder (sentiNews dataset-document level)
-Document/
+#Document/

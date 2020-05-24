@@ -13,9 +13,9 @@ import operator
 from itertools import combinations, product
 import collections
 from collections import defaultdict
-from context_deprel import get_featureSentiment
-from context_shortest_path import sentRelations
-from context_window import getWindowPol
+from context_feature.context_deprel import get_featureSentiment
+from context_feature.context_shortest_path import sentRelations
+from context_feature.context_window import getWindowPol
 
 
 def documentPolarity(doc_path):

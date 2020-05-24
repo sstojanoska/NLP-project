@@ -23,10 +23,8 @@ from nltk.corpus import stopwords
 nltk.download('stopwords')
 nltk.download('punkt')
 ```
-- Install [NetworkX](https://networkx.github.io/)
-```
-pip install networkx
-```
+- Install [NetworkX](https://pypi.org/project/networkx/)
+
 - Install [Levenshtein](https://pypi.org/project/python-Levenshtein/)
 
 
